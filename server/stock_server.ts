@@ -1,0 +1,68 @@
+import * as express from 'express';
+import { Server } from 'ws';
+
+const app = express();
+
+app.get('/api/stock', (req, res) => { // 获取股票信息
+    let result = stocks;
+    let params = req.query;
+
+    if (params.name) {
+        result = result.filter(stock => stock.name.indexOf(params.name) !== -1);
+    }
+
+    res.json(result); // 把结果作为json格式返回
+});
+
+app.get('/api/stock/:id', (req, res) => { // 获取单个的股票
+    res.json(stocks.find(stock => stock.id == req.params.id)); // 把结果作为json格式返回
+});
+
+const server = app.listen(8000, 'localhost', () => {
+    console.log('服务器已经启动，地址是：http://localhost:8000');
+});
+
+
+/* websocket部分 */
+var subscription = new Set<any>();
+
+const wsServer = new Server({port: 8085});
+wsServer.on("connection", websocket => { // 如果有客户端连接上，放到一个集合里
+    subscription.add(websocket);
+});
+
+var messageCount = 0;
+
+setInterval(() => {
+    subscription.forEach(ws => {
+        if (ws.readyState === 1) { // 判断websocket是否还连接，连接就发一个消息，没在连接就从集合中删除
+            ws.send(JSON.stringify({messageCount: messageCount++}));
+        } else {
+            subscription.delete(ws);
+        }
+    })
+}, 2000);
+
+export class Stock {
+    constructor(
+        public id: number,
+        public name: string,
+        public price: number,
+        public rating: number,
+        public desc: string,
+        public categories: Array<string>
+    ) {
+
+    }
+}
+
+const stocks: Stock[] = [
+    new Stock(1, '第一只股票', 1.99, 3.5, '这是第一只股票，是我在学习慕课网angular入门实战时创建的', ['IT', '互联网']),
+    new Stock(2, '第二只股票', 2.99, 4.5, '这是第二只股票，是我在学习慕课网angular入门实战时创建的', ['金融']),
+    new Stock(3, '第三只股票', 3.99, 2.5, '这是第三只股票，是我在学习慕课网angular入门实战时创建的', ['IT']),
+    new Stock(4, '第四只股票', 4.99, 1.5, '这是第四只股票，是我在学习慕课网angular入门实战时创建的', ['互联网']),
+    new Stock(5, '第五只股票', 5.99, 2.5, '这是第五只股票，是我在学习慕课网angular入门实战时创建的', ['IT', '互联网']),
+    new Stock(6, '第六只股票', 6.99, 3.5, '这是第六只股票，是我在学习慕课网angular入门实战时创建的', ['金融']),
+    new Stock(7, '第七只股票', 7.99, 3.5, '这是第七只股票，是我在学习慕课网angular入门实战时创建的', ['IT', '金融']),
+    new Stock(8, '第八只股票', 8.99, 4.5, '这是第八只股票，是我在学习慕课网angular入门实战时创建的', ['金融', '互联网'])
+];
