@@ -1,7 +1,10 @@
 import * as express from 'express';
+import * as path from 'path';
 import { Server } from 'ws';
 
 const app = express();
+
+app.use('/', express.static(path.join(__dirname, '..', 'client'))); // 静态文件放在当前文件的上一级的client文件夹中
 
 app.get('/api/stock', (req, res) => { // 获取股票信息
     let result = stocks;
